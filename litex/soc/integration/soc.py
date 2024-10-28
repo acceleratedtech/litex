@@ -1474,7 +1474,7 @@ class LiteXSoC(SoC):
         self.add_module(name=name, module=Identifier(identifier))
 
     # Add UART -------------------------------------------------------------------------------------
-    def add_uart(self, name="uart", uart_name="serial", baudrate=115200, fifo_depth=16):
+    def add_uart(self, name="uart", uart_name="serial", baudrate=115200, fifo_depth=16, with_dynamic_baudrate=False):
         # Imports.
         from litex.soc.cores.uart import UART, UARTCrossover
 
@@ -1512,7 +1512,7 @@ class LiteXSoC(SoC):
 
         # Crossover + UARTBone.
         elif uart_name in ["crossover+uartbone"]:
-            uart = self.add_uartbone(baudrate=baudrate, with_crossover=True, **uart_kwargs)
+            uart = self.add_uartbone(baudrate=baudrate, with_crossover=True, with_dynamic_baudrate=with_dynamic_baudrate, **uart_kwargs)
 
         # JTAG UART.
         elif uart_name in ["jtag_uart"]:
@@ -1549,7 +1549,7 @@ class LiteXSoC(SoC):
         # Regular UART.
         else:
             from litex.soc.cores.uart import UARTPHY
-            uart_phy  = UARTPHY(uart_pads, clk_freq=self.sys_clk_freq, baudrate=baudrate)
+            uart_phy  = UARTPHY(uart_pads, clk_freq=self.sys_clk_freq, baudrate=baudrate, with_dynamic_baudrate=with_dynamic_baudrate)
             uart      = UART(uart_phy, **uart_kwargs)
 
         # Add PHY/UART.
@@ -1565,7 +1565,7 @@ class LiteXSoC(SoC):
             self.add_constant("UART_POLLING")
 
     # Add UARTbone ---------------------------------------------------------------------------------
-    def add_uartbone(self, name="uartbone", uart_name="serial", clk_freq=None, baudrate=115200, cd="sys", with_crossover=False, **uart_kwargs):
+    def add_uartbone(self, name="uartbone", uart_name="serial", clk_freq=None, baudrate=115200, cd="sys", with_crossover=False, with_dynamic_baudrate=False, **uart_kwargs):
         # Imports.
         from litex.soc.cores import uart
 
@@ -1574,7 +1574,7 @@ class LiteXSoC(SoC):
             clk_freq = self.sys_clk_freq
 
         self.check_if_exists(name)
-        uartbone_phy = uart.UARTPHY(self.platform.request(uart_name), clk_freq, baudrate)
+        uartbone_phy = uart.UARTPHY(self.platform.request(uart_name), clk_freq, baudrate, with_dynamic_baudrate=with_dynamic_baudrate)
 
         if with_crossover:
             crossover = uart.UARTCrossover(pad_phy=uartbone_phy, **uart_kwargs)
